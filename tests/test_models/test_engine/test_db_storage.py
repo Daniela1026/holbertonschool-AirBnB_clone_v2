@@ -1,70 +1,91 @@
 #!/usr/bin/python3
-"""Unittest for db_storage"""
-import unittest
-import pep8
-import sys
-import os
-import inspect
-from models.engine import db_storage
+"""
+Defines a new engine of storage
+Database mode, to be used with SQLAlchemy
+"""
+from os import getenv
+from sqlalchemy import create_engine, MetaData
+from sqlalchemy.orm import Session, sessionmaker, scoped_session
+import models
 from models.amenity import Amenity
-from models.base_model import BaseModel
 from models.city import City
 from models.place import Place
 from models.review import Review
 from models.state import State
 from models.user import User
-from models import storage
-
-DBStorage = db_storage.DBStorage
+from models.base_model import BaseModel, Base
 
 
-class TestDbStorage(unittest.TestCase):
+class DBStorage:
     """
-    Unittest for db_storage
+    Create our database with SQLAlchemy
+    Alchemy is our best friend!
     """
-    @classmethod
-    def setUpClass(cls):
-        """Set up for the doc tests"""
-        cls.dbs_f = inspect.getmembers(DBStorage, inspect.isfunction)
+    __engine = None
+    __session = None
 
-    def testPep8(self):
+    def __init__(self):
         """
-        Unittest for pep8 complaince
+        Starting the engine
         """
-        pep8style = pep8.StyleGuide(quiet=True)
-        result = pep8style.check_files(['models/engine/db_storage.py'])
-        self.assertEqual(result.total_errors, 0,
-                         'Found code style errors (and warnings).')
+        user = getenv('HBNB_MYSQL_USER')
+        pwd = getenv('HBNB_MYSQL_PWD')
+        host = getenv('HBNB_MYSQL_HOST')
+        database = getenv('HBNB_MYSQL_DB')
+        self.__engine = create_engine('mysql+mysqldb://{}:{}@{}/{}'
+                                      .format(user, pwd, host, database),
+                                      pool_pre_ping=True)
+        if getenv('HBNB_ENV') == 'test':
+            Base.metadata.drop_all(self.__engine)
 
-    def testPep8Unitt(self):
+    def all(self, cls=None):
         """
-        Unittest for pep8 complaince
+        Perform query on the current database session
+        # Must return a dictionary with all objects according
+        to class name passed in cls argument
         """
-        pep8style = pep8.StyleGuide(quiet=True)
-        result = pep8style.check_files(
-            ['tests/test_models/test_engine/test_db_storage.py']
-        )
-        self.assertEqual(result.total_errors, 0,
-                         'Found code style errors (and warnings).')
+        obj_dict = {}
+        if cls != '':
+            objs = self.__session.query(cls)
+        else:
+            objs = self.__session.query(Amenity)
+            # We could have used extend() list method too,
+            # but would have needed another way to code also
+            objs += self.__session.query(City)
+            objs += self.__session.query(Place)
+            objs += self.__session.query(Review)
+            objs += self.__session.query(State)
+            objs += self.__session.query(User)
+        return {"{}.{}".format(obj.__class__.__name__, obj.id): obj
+                for obj in objs}
 
-    def test_db_storage_module_docstring(self):
-        """Test for the db_storage.py module docstring"""
-        self.assertIsNot(db_storage.__doc__, None,
-                         "db_storage.py needs a docstring")
-        self.assertTrue(len(db_storage.__doc__) >= 1,
-                        "db_storage.py needs a docstring")
+    def new(self, obj):
+        """Adds the object to the current db session"""
+        self.__session.add(obj)
 
-    def test_db_storage_class_docstring(self):
-        """Test for the DBStorage class docstring"""
-        self.assertIsNot(DBStorage.__doc__, None,
-                         "DBStorage class needs a docstring")
-        self.assertTrue(len(DBStorage.__doc__) >= 1,
-                        "DBStorage class needs a docstring")
+    def save(self):
+        """Commit all changes to current db session"""
+        self.__session.commit()
 
-    def test_dbs_func_docstrings(self):
-        """Test for the presence of docstrings in DBStorage methods"""
-        for func in self.dbs_f:
-            self.assertIsNot(func[1].__doc__, None,
-                             "{:s} method needs a docstring".format(func[0]))
-            self.assertTrue(len(func[1].__doc__) >= 1,
-                            "{:s} method needs a docstring".format(func[0]))
+    def delete(self, obj):
+        """ Delete obj of current db session """
+        if obj:
+            self.__session.delete(obj)
+
+    def reload(self):
+        """
+        Commit all changes in database after
+        the changings
+        """
+        Base.metadata.create_all(self.__engine)
+        session_factory = sessionmaker(
+            bind=self.__engine, expire_on_commit=False)
+        Session = scoped_session(session_factory)
+        self.__session = Session
+
+    def close(self):
+        """close session, proper ending"""
+        self.__session.remove()
+
+    def classes(self):
+        """ returns dictionary of valid classes """
