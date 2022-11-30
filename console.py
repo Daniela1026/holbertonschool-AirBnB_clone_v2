@@ -290,8 +290,7 @@ class HBNBCommand(cmd.Cmd):
 
     def default(self, line):
         """retrieve all instances of a class and
-        retrieve the number of instances
-        """
+        retrieve the number of instances"""
         my_list = line.split('.')
         if len(my_list) >= 2:
             if my_list[1] == "all()":
