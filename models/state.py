@@ -12,17 +12,20 @@ from os import environ
 class State(BaseModel):
     """ State class """
     __tablename__ = 'states'
-    name = Column(String(128), nullable=False)
-    cities = relationship("City", cascade="all, delete", backref="state")
+    if environ('HBNB_TYPE_STORAGE') == 'db':
+        """ db ==>  means let's go for SQLAlchemy logic"""
+        name = Column(String(128), nullable=False)
+        cities = relationship('City', cascade='all, delete', backref='state')
+    else:
+        name = ""
 
-    if ('HBNB_TYPE_STORAGE' not in environ or
-            environ['HBNB_TYPE_STORAGE'] != 'db'):
-
-        @property
-        def cities(self):
-            """Returns the list of City instances with equal state_id"""
-            from models import storage
-            cities = storage.all(City)
-            self.__cities = [city for city in cities.values()
-                             if city.state_id == self.id]
-            return self.__cities
+    @property
+    def cities(self):
+        """
+        Getter - returns the list of City instances
+        """
+        l_cities = []
+        for city in models.storage.all(City).values():
+            if city.state_id == self.id:
+                l_cities.append(city)
+        return l_cities
