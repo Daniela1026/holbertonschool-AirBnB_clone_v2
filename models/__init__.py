@@ -7,13 +7,18 @@ from models.city import City
 from models.amenity import Amenity
 from models.place import Place
 from models.review import Review
-import os
+from os import environ
 
-if 'HBNB_TYPE_STORAGE' in os.environ and os.environ['HBNB_TYPE_STORAGE'] == 'db':
-    from models.engine.db_storage import DBStorage
-    storage = DBStorage()
-    storage.reload()
+if environ('HBNB_TYPE_STORAGE') == 'db':
+    from models.engine import db_storage
+    storage = db_storage.DBStorage()
 else:
-    from models.engine.file_storage import FileStorage
-    storage = FileStorage()
-    storage.reload()
+    from models.engine import file_storage
+    storage = file_storage.FileStorage()
+
+classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
+           "Place": Place, "Review": Review,
+           "State": State, "User": User}
+
+
+storage.reload()
