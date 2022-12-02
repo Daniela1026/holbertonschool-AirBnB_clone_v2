@@ -8,6 +8,7 @@ from sqlalchemy import String, Integer, Column, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 import os
 
+Base = declarative_base()
 
 class BaseModel:
     """A base class for all hbnb models"""
