@@ -1,7 +1,5 @@
 #!/usr/bin/python3
-""" 
-display “n is a number” only if n is an integer
-"""
+"""display “n is a number” only if n is an integer"""
 
 from markupsafe import escape
 
@@ -47,6 +45,5 @@ def vernumber(n):
     """
     return '{} is a number'.format(escape(n))
 
-
-if __name__ == "__main__":
+    if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
