@@ -1,5 +1,7 @@
 #!/usr/bin/python3
-"""display “n is a number” only if n is an integer"""
+"""
+display “n is a number” only if n is an integer
+"""
 
 from markupsafe import escape
 
