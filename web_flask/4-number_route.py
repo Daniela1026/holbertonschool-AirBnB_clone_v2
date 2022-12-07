@@ -2,6 +2,7 @@
 """
 followed by the value of the text variable
 """
+from markupsafe import escape
 from flask import Flask
 app = Flask(__name__)
 
@@ -22,7 +23,7 @@ def hbnb():
 @app.route("/c/<text>", strict_slashes=False)
 def c(text):
     """
-    Displays "C" followed by the text in <text>. 
+    Displays "C" followed by the text in <text>.
     """
     return "C {}".format(text.replace('_', ' '))
 
