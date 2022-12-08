@@ -41,7 +41,7 @@ def vernumber(n):
     return '{} is a number'.format(escape(n))
 
 
-@app.route("/number_template/<int:n>", strict_slashes=False)
+@app.route('/number_template/<int:n>', strict_slashes=False)
 def number_template(n):
     """ Display a HTML page only if n is an integer """
     return render_template('5-number.html', n=n)
