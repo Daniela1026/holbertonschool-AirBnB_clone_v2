@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """This defines the DBStorage class"""
 
-from models.base_model import BaseModel
+from models.base_model import BaseModel, Base
 from models.amenity import Amenity
 from models.city import City
 from models.place import Place
@@ -9,7 +9,6 @@ from models.review import Review
 from models.state import State
 from models.user import User
 from sqlalchemy import create_engine, MetaData
-from sqlalchemy.orm import relationship
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 from os import getenv
