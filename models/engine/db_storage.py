@@ -38,25 +38,14 @@ class DBStorage():
         """Query on the curret database session all objects of the given class.
         If cls is None, queries all types of objects.
         """
-        dicty = {}
-
-        if cls is None:
-            list_classes = [State, City, User, Place, Review, Amenity]
-            for classes in list_classes:
-                query = self.__session.query(classes)
-                for items in query.all():
-                    key = "{}.{}".format(type(items).__name__, items.id)
-                    dicty[key] = items
+        if cls:
+            objs = self.__session.query(cls).all()
 
         else:
-            if type(cls) is str:
-                cls = eval(cls)
-            query = self.__session.query(cls).all()
-            for items in query.all():
-                key = "{}.{}".format(type(items).__name__, items.id)
-                dicty[key] = items
-
-        return (dicty)
+            classes = [State, City, User, Place, Review, Amenity]
+            objs = []
+            for cls in classes:
+                objs += self.__session.query(cls)
 
     def new(self, obj):
         """Add obj to the current database session."""
