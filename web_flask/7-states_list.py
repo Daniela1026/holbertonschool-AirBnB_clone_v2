@@ -17,6 +17,9 @@ def teardown_appcontext(self):
 def states_list():
     """list of all State objects present in DBStorage sorted by name (A->Z)"""
     states_lst = storage.all(State)
+    result = []
+    for state in states_lst.values():
+        result.append(state)
     return render_template("7-states_list.html", states_lst=states_lst)
 
 
