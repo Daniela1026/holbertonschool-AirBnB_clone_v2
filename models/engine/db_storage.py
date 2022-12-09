@@ -51,7 +51,7 @@ class DBStorage():
         else:
             if type(cls) is str:
                 cls = eval(cls)
-            query = self.__session.query(cls)
+            query = self.__session.query(cls).all()
             for items in query.all():
                 key = "{}.{}".format(type(items).__name__, items.id)
                 dicty[key] = items
