@@ -14,58 +14,63 @@ from sqlalchemy.orm import sessionmaker
 from os import getenv
 
 
-class DBStorage():
-    """Defines the DBStorage class"""
+user = os.getenv('HBNB_MYSQL_USER')
+password = os.getenv('HBNB_MYSQL_PWD')
+host = os.getenv('HBNB_MYSQL_HOST')
+database = os.getenv('HBNB_MYSQL_DB')
+
+classes = {'User': User,
+           'State': State,
+           'City': City,
+           'Amenity': Amenity,
+           'Place': Place,
+           'Review': Review}
+
+
+class DBStorage:
     __engine = None
     __session = None
 
     def __init__(self):
-        """
-        Starting the engine
-        """
-        self.__engine = create_engine("mysql+mysqldb://{}:{}@{}/{}".
-                                      format(getenv("HBNB_MYSQL_USER"),
-                                             getenv("HBNB_MYSQL_PWD"),
-                                             getenv("HBNB_MYSQL_HOST"),
-                                             getenv("HBNB_MYSQL_DB")),
+        self.__engine = create_engine('mysql+mysqldb://{}:{}@{}/{}'
+                                      .format(user, password, host, database),
                                       pool_pre_ping=True)
-        if getenv("HBNB_ENV") == "test":
+        if os.getenv('HBNB_ENV') == 'db':
             Base.metadata.drop_all(self.__engine)
 
     def all(self, cls=None):
-        """Query on the curret database session all objects of the given class.
-        If cls is None, queries all types of objects.
-        """
-        if cls:
-            objs = self.__session.query(cls).all()
-
+        dict_1 = {}
+        if cls is None:
+            for value in classes.values():
+                state_info = self.__session.query(value)
+                for obj in state_info:
+                    key = obj.__class__.__name__ + "." + obj.id
+                    dict_1[key] = obj
         else:
-            classes = [State, City, User, Place, Review, Amenity]
-            objs = []
-            for cls in classes:
-                objs += self.__session.query(cls)
+            state_info = self.__session.query(classes[cls])
+            for obj in state_info:
+                key = obj.__class__.__name__ + "." + obj.id
+                dict_1[key] = obj
+        return dict_1
 
     def new(self, obj):
-        """Add obj to the current database session."""
+        '''new obj added to the session'''
         self.__session.add(obj)
 
     def save(self):
-        """Commit all changes to the current database session."""
+        '''save obj'''
         self.__session.commit()
 
     def delete(self, obj=None):
-        """Delete obj from the current database session."""
-        if obj is not None:
-            self.__session.delete(obj)
+        '''delete obj'''
+        self.__session.delete(obj)
 
     def reload(self):
-        """Create all tables in the database and initialize a new session."""
         Base.metadata.create_all(self.__engine)
-        session_factory = sessionmaker(bind=self.__engine,
-                                       expire_on_commit=False)
-        Session = scoped_session(session_factory)
-        self.__session = Session()
+        Session1 = sessionmaker(bind=self.__engine, expire_on_commit=False)
+        Session2 = scoped_session(Session1)
+        self.__session = Session2()
 
     def close(self):
-        """Close the working SQLAlchemy session."""
+        """calls the methos remove()"""
         self.__session.close()
