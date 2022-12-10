@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 """This defines the DBStorage class"""
 
+from sqlalchemy import create_engine, MetaData
+from sqlalchemy.orm import sessionmaker, scoped_session
 import os
 from models.base_model import BaseModel, Base
 from models.amenity import Amenity
@@ -9,10 +11,8 @@ from models.place import Place
 from models.review import Review
 from models.state import State
 from models.user import User
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.orm import scoped_session
-from sqlalchemy.orm import sessionmaker
-from os import getenv
+from sqlalchemy.orm import Session
+
 
 
 user = os.getenv('HBNB_MYSQL_USER')
@@ -36,42 +36,40 @@ class DBStorage:
         self.__engine = create_engine('mysql+mysqldb://{}:{}@{}/{}'
                                       .format(user, password, host, database),
                                       pool_pre_ping=True)
-        if os.getenv('HBNB_ENV') == 'db':
-            Base.metadata.drop_all(self.__engine)
+        if os.getenv("HBNB_ENV ") == 'test':
+            meta = MetaData(self.__engine)
+            meta.drop_all()
 
     def all(self, cls=None):
-        dict_1 = {}
-        if cls is None:
-            for value in classes.values():
-                state_info = self.__session.query(value)
-                for obj in state_info:
-                    key = obj.__class__.__name__ + "." + obj.id
-                    dict_1[key] = obj
+        dic = {}
+        if not cls:
+            for actual_class in classes.values():
+                object_list = self.__session.query(actual_class).all()
+                for obj in object_list:
+                    key = "{}.{}".format(type(obj).__name__, obj.id)
+                    dic[key] = obj
         else:
-            state_info = self.__session.query(classes[cls])
-            for obj in state_info:
-                key = obj.__class__.__name__ + "." + obj.id
-                dict_1[key] = obj
-        return dict_1
+            object_list = self.__session.query(cls).all()
+            for obj in object_list:
+                key = "{}.{}".format(type(obj).__name__, obj.id)
+                dic[key] = obj
+        return dic
 
     def new(self, obj):
-        '''new obj added to the session'''
         self.__session.add(obj)
 
     def save(self):
-        '''save obj'''
         self.__session.commit()
 
     def delete(self, obj=None):
-        '''delete obj'''
-        self.__session.delete(obj)
+        if obj:
+            self.__session.delete(obj)
 
     def reload(self):
         Base.metadata.create_all(self.__engine)
-        Session1 = sessionmaker(bind=self.__engine, expire_on_commit=False)
-        Session2 = scoped_session(Session1)
-        self.__session = Session2()
+        sess = sessionmaker(expire_on_commit=False, bind=self.__engine)
+        Session1 = scoped_session(sess)
+        self.__session = Session1()
 
     def close(self):
-        """calls the methos remove()"""
-        self.__session.close()
+        Session.close(self.__session)
