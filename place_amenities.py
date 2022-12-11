@@ -8,7 +8,7 @@ state.save()
 city = City(state_id=state.id, name="San Francisco")
 city.save()
 
-user = User(email="john@snow.com", password="johnpwd")
+user = User(email="johndoe@gmail.com", password="johnpwd")
 user.save()
 
 place_1 = Place(user_id=user.id, city_id=city.id, name="House 1")
