@@ -2,7 +2,6 @@
 """ Console Module """
 import cmd
 import sys
-import shlex
 from models.base_model import BaseModel
 from models.__init__ import storage
 from models.user import User
@@ -11,7 +10,6 @@ from models.state import State
 from models.city import City
 from models.amenity import Amenity
 from models.review import Review
-import os
 
 
 class HBNBCommand(cmd.Cmd):
@@ -116,35 +114,27 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """ Create an object of any class"""
-        if not args:
+        param = args.split(' ')
+        if not param:
             print("** class name missing **")
             return
-        params = args.split(" ")
-        if params[0] not in HBNBCommand.classes:
+        elif param[0] not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-        else:
-            new_instance = HBNBCommand.classes[params[0]]()
-            self.update_instance(params, new_instance)
-        storage.new(new_instance)
+        new_instance = HBNBCommand.classes[param[0]]()
+        for indx in range(1, len(param)):
+            try:
+                param_1 = param[indx].split('=')
+                key = param_1[0]
+                value = param_1[1]
+                value = value.replace('_', ' ')
+                value = value.replace('\"', '')
+                if type(value) in (str, int, float):
+                    setattr(new_instance, key, value)
+            except Exception:
+                continue
         print(new_instance.id)
-        storage.save()
-
-    def update_instance(self, args, instance):
-        """Transform a string in dictionary"""
-        for idx in range(1, len(args)):
-            key, value = args[idx].split('=')
-            if value[0] is value[-1] in ['"', "'"]:
-                value = value.strip("\"'").replace('_', ' ')
-            else:
-                try:
-                    value = int(value)
-                except ValueError:
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        continue
-            setattr(instance, key, value)
+        new_instance.save()
 
     def help_create(self):
         """ Help information for the create method """
@@ -222,25 +212,16 @@ class HBNBCommand(cmd.Cmd):
         print_list = []
 
         if args:
-            arg = args.split(' ')[0]  # remove possible trailing args
-            if arg not in HBNBCommand.classes:
+            args = args.split(' ')[0]  # remove possible trailing args
+            if args not in HBNBCommand.classes:
                 print("** class doesn't exist **")
                 return
-            if os.getenv('HBNB_TYPE_STORAGE') == 'db':
-                for k, v in storage.all().items():
-                    if k.split('.')[0] == arg:
-                        print_list.append(str(v))
-            else:
-                for k, v in storage._FileStorage__objects.items():
-                    if k.split('.')[0] == arg:
-                        print_list.append(str(v))
+            for k, v in storage.all().items():
+                if k.split('.')[0] == args:
+                    print_list.append(str(v))
         else:
-            if os.getenv('HBNB_TYPE_STORAGE') == 'db':
-                for k, v in storage.all().items():
-                    print_list.append(str(v))
-            else:
-                for k, v in storage._FileStorage__objects.items():
-                    print_list.append(str(v))
+            for k, v in storage.all().items():
+                print_list.append(str(v))
 
         print(print_list)
 
@@ -352,3 +333,4 @@ class HBNBCommand(cmd.Cmd):
 
 if __name__ == "__main__":
     HBNBCommand().cmdloop()
+    
